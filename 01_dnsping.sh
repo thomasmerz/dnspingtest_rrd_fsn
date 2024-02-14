@@ -5,7 +5,7 @@ case $(hostname) in
   merz-nimbus)
     cd /home/thomas/Documents/Administration/dnspingtest_rrd."$(hostname)"/ || exit 1
     ;;
-  ubuntu-cx11-02|ubuntu-cx11-03|ubuntu-fsn1-1)
+  ubuntu-cx11-02|ubuntu-cx11-03)
     cd ~/dev/dnspingtest_rrd."$(hostname)"/ || exit 1
     ;;
   *)
@@ -17,9 +17,10 @@ esac
 PING=/usr/bin/dnsping
 COUNT=4
 DEADLINE=5
+tcp=''
 
 dnsping_host() {
-    output="$($PING -q -c $COUNT -w $DEADLINE -s "$1" nextwurz.mooo.com 2>&1)"
+    output="$($PING "$tcp" -q -c $COUNT -w $DEADLINE -s "$1" nextwurz.mooo.com 2>&1)"
     # notice $output is quoted to preserve newlines
     temp=$(echo "$output"| awk '
         BEGIN           {pl=100; rtt=0.1}
@@ -49,9 +50,13 @@ if [ ! -f dnsresolvers.list ]; then
   echo "dnsresolvers.list: file not found."
   exit 2
 fi
-resolverlist="$(grep -v ^\# dnsresolvers.list)"
+resolverlist="$(grep -v ^\# dnsresolvers.list.tcp)"
 [ -z "$resolverlist" ] && exit 1
 for resolver in $resolverlist; do
+  if echo "$resolver"|grep -q 'T'; then
+    resolver="$(echo "$resolver"|cut -d "-" -f1)"
+    tcp="-T"
+  fi
   # create rrd-file from scratch if not existing:
   if ! [ -f data/dnsping_"${resolver}".rrd ]; then
     /usr/bin/rrdtool create data/dnsping_"${resolver}".rrd \
