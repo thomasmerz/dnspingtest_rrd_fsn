@@ -5,7 +5,7 @@ case $(hostname) in
   merz-nimbus)
     cd /home/thomas/Documents/Administration/dnspingtest_rrd."$(hostname)"/ || exit 1
     ;;
-  ubuntu-cx11-02|ubuntu-cx11-03|ubuntu-fsn1-1)
+  ubuntu-cx11-02|ubuntu-cx11-03)
     cd ~/dev/dnspingtest_rrd."$(hostname)"/ || exit 1
     ;;
   *)
@@ -23,6 +23,10 @@ fi
 resolverlist="$(grep -v ^\# dnsresolvers.list)"
 [ -z "$resolverlist" ] && exit 1
 for resolver in $resolverlist; do
+
+  if echo "$resolver"|grep -q 'T'; then
+    resolver="$(echo "$resolver"|cut -d "-" -f1)"
+  fi
 
   # create html-file from "template" if not existing:
   for file in index_"$resolver"*.html; do
